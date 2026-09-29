@@ -13,7 +13,7 @@ class DashboardController extends Controller
         return view('dashboard', [
             'stats' => [
                 'Products found' => Product::count(),
-                'Extra Comm' => Product::mainOpportunity()->count(),
+                'Extra Comm' => Product::where('has_extra_comm', true)->count(),
                 'Ready for content' => Product::mainOpportunity()->whereNotNull('affiliate_url')->has('images')->count(),
                 'Testing' => Product::where('product_status', ProductStatus::Testing)->count(),
                 'Winners' => Product::where('product_status', ProductStatus::Winner)->count(),

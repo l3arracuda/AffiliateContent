@@ -43,6 +43,11 @@ class PhaseZeroTest extends TestCase
     public function test_dashboard_reads_database_and_renders(): void
     {
         $this->get('/')->assertOk()->assertSee('Products found')->assertSee('24');
+        $dashboard = $this->get('/');
+        $this->assertSame(18, $dashboard->viewData('stats')['Extra Comm']);
+        foreach ($dashboard->viewData('products') as $product) {
+            $this->assertTrue($product->product_status->canEnterMainOpportunity());
+        }
     }
 
     public function test_product_create_validates_and_logs(): void
@@ -72,9 +77,13 @@ class PhaseZeroTest extends TestCase
 
     public function test_market_watch_defaults_to_extra_comm_only_and_can_show_all(): void
     {
-        $this->get('/market-watch')->assertOk()->assertSee('18', false);
-        $this->get('/market-watch?extra_comm=0')->assertOk()->assertSee('24', false);
-        $this->assertSame(18, Product::mainOpportunity()->count());
+        $marketWatch = $this->get('/market-watch')->assertOk();
+        $this->assertSame(14, $marketWatch->viewData('products')->total());
+        $this->assertSame(14, Product::mainOpportunity()->count());
+        $this->assertSame(18, Product::where('has_extra_comm', true)->count());
+        $this->assertSame(24, $this->get('/market-watch?extra_comm=0')->assertOk()->viewData('products')->total());
+        $this->assertSame(24, $this->get('/products')->assertOk()->viewData('products')->total());
+        $this->assertSame(0, Product::mainOpportunity()->whereIn('product_status', ['rejected', 'archived'])->count());
     }
 
     public function test_affiliate_and_image_filters_work_together(): void
@@ -135,6 +144,10 @@ class PhaseZeroTest extends TestCase
         $product = Product::where('product_status', ProductStatus::PreTest)->mainOpportunity()->firstOrFail();
         $imagePage = Page::where('content_style', 'image_post')->firstOrFail();
         $this->post('/contents', ['product_id' => $product->id, 'page_id' => $imagePage->id, 'content_type' => 'image_post', 'caption' => 'I tried this product'])->assertSessionHasErrors('caption');
+        $this->post('/contents', ['product_id' => $product->id, 'page_id' => $imagePage->id, 'content_type' => 'image_post', 'caption' => 'I have tried this product'])->assertSessionHasErrors('caption');
+        $this->post('/contents', ['product_id' => $product->id, 'page_id' => $imagePage->id, 'content_type' => 'image_post', 'image_prompt' => "I've tested this product"])->assertSessionHasErrors('image_prompt');
+        $testing = Product::where('product_status', ProductStatus::Testing)->mainOpportunity()->firstOrFail();
+        $this->post('/contents', ['product_id' => $testing->id, 'page_id' => $imagePage->id, 'content_type' => 'image_post', 'caption' => 'I have tried this product'])->assertSessionHasErrors('caption');
         $realPage = Page::where('content_style', 'real_review')->firstOrFail();
         $this->post('/contents', ['product_id' => $product->id, 'page_id' => $realPage->id, 'content_type' => 'real_review'])->assertSessionHasErrors('content_type');
         $this->post('/contents', ['product_id' => $product->id, 'page_id' => $imagePage->id, 'content_type' => 'image_post', 'caption' => 'Product features to check before buying.'])->assertRedirect();
@@ -148,6 +161,10 @@ class PhaseZeroTest extends TestCase
         $this->post('/contents', ['product_id' => $product->id, 'page_id' => $imagePage->id, 'content_type' => 'ai_video'])->assertSessionHasErrors('page_id');
         $ineligible = Product::where('has_extra_comm', false)->firstOrFail();
         $this->post('/contents', ['product_id' => $ineligible->id, 'page_id' => $imagePage->id, 'content_type' => 'image_post'])->assertSessionHasErrors('product_id');
+        foreach ([ProductStatus::Rejected, ProductStatus::Archived] as $excludedStatus) {
+            $excluded = Product::where('has_extra_comm', true)->where('product_status', $excludedStatus)->firstOrFail();
+            $this->post('/contents', ['product_id' => $excluded->id, 'page_id' => $imagePage->id, 'content_type' => 'image_post'])->assertSessionHasErrors('product_id');
+        }
         $this->get('/pages')->assertOk()->assertSee('Page 5');
     }
 
@@ -162,6 +179,14 @@ class PhaseZeroTest extends TestCase
             'hook' => 'Draft real demonstration',
         ])->assertRedirect();
 
+        $this->assertSame('real_use', Content::latest('id')->first()->experience_basis);
+        $imagePage = Page::where('content_style', 'image_post')->firstOrFail();
+        $this->post('/contents', [
+            'product_id' => $product->id,
+            'page_id' => $imagePage->id,
+            'content_type' => 'image_post',
+            'caption' => 'I have tried this product',
+        ])->assertRedirect();
         $this->assertSame('real_use', Content::latest('id')->first()->experience_basis);
     }
 }

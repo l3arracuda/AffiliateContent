@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.1 — Phase 0 QA fixes
+
+- Blocked additional personal-use claims, including “I have tried” and “I've tested”, across draft text and prompts before a product reaches a real-use stage.
+- Excluded rejected and archived products from Market Watch opportunities, top opportunities, and main content selection while retaining them in the all-products view.
+- Reflowed Market Watch filters into one column on mobile screens.
+- Verified the 390px layout in Chrome with no horizontal overflow and verified a browser click copies the mock affiliate URL to the clipboard.
+
 ## v0.1.0 — Phase 0 foundation
 
 - Bootstrapped Laravel 12 with SQLite as the local default and MySQL/MariaDB configuration support.

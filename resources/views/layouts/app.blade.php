@@ -21,7 +21,7 @@
             <a class="{{ request()->routeIs('pages.*') ? 'active' : '' }}" href="{{ route('pages.index') }}">Pages</a>
             <a class="{{ request()->routeIs('settings') ? 'active' : '' }}" href="{{ route('settings') }}">Settings</a>
         </nav>
-        <div class="sidebar-bottom">Phase 0 Foundation<br><span>v0.1.0 · Internal preview</span></div>
+        <div class="sidebar-bottom">Phase 0 Foundation<br><span>v0.1.1 · Internal preview</span></div>
     </aside>
     <main class="main">
         <header class="topbar"><span>Affiliate command center</span><span class="topbar-right">Phase 0 · Demo environment</span></header>

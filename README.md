@@ -6,11 +6,11 @@ An internal Laravel web application for a Shopee affiliate workflow. Phase 0 pro
 
 Market Watch → require EXTRA COMM → inspect links and images → choose opportunities → draft distinct content for five pages → measure results in later phases → order winning products → make real reviews. See PROJECT_OVERVIEW.md for the project-wide direction.
 
-EXTRA COMM is a hard eligibility requirement for the main opportunity list and content workflow. Products without it remain visible on the all-products page. Pre-test content is non-personal; real review drafts require a received, real_review, or scaling product.
+EXTRA COMM is a hard eligibility requirement for the main opportunity list and content workflow. Rejected and archived products are excluded from those workflows even if they have EXTRA COMM. All products remain visible on the all-products page. Pre-test content is non-personal; real review drafts require a received, real_review, or scaling product.
 
 ## Current phase and stack
 
-- Phase 0, version v0.1.0
+- Phase 0, version v0.1.1
 - Laravel 12, PHP 8.2 or newer (PHP 8.3+ preferred for the long-term environment)
 - Blade with local CSS and JavaScript; no Node build is needed
 - SQLite by default for local evaluation; MySQL/MariaDB can be configured in .env

@@ -25,4 +25,9 @@ enum ProductStatus: string
     {
         return in_array($this, [self::Received, self::RealReview, self::Scaling], true);
     }
+
+    public function canEnterMainOpportunity(): bool
+    {
+        return ! in_array($this, [self::Rejected, self::Archived], true);
+    }
 }

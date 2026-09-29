@@ -232,5 +232,11 @@ font-size:27px}
 .stat-grid,.page-card-grid,.form-grid{
 grid-template-columns:1fr}
 .filter-panel label{
-min-width:calc(50% - 10px)}
+min-width:0;width:100%}
+.filter-panel{
+display:grid;grid-template-columns:minmax(0,1fr)}
+.filter-panel input,.filter-panel select{
+min-width:0;max-width:100%}
+.filter-panel .button{
+width:100%}
 }

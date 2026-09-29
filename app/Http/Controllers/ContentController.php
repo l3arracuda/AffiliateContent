@@ -44,6 +44,9 @@ class ContentController extends Controller
         if (! $product->has_extra_comm) {
             throw ValidationException::withMessages(['product_id' => 'Main content workflow requires EXTRA COMM.']);
         }
+        if (! $product->product_status->canEnterMainOpportunity()) {
+            throw ValidationException::withMessages(['product_id' => 'Rejected or archived products cannot enter the main content workflow.']);
+        }
         $page = Page::findOrFail($data['page_id']);
         if ($page->content_style !== $data['content_type']) {
             throw ValidationException::withMessages(['page_id' => 'Content type must match the selected page strategy.']);
@@ -52,11 +55,20 @@ class ContentController extends Controller
         if ($data['content_type'] === 'real_review' && ! $realExperience) {
             throw ValidationException::withMessages(['content_type' => 'Real review requires a received, real_review, or scaling product.']);
         }
-        $copy = implode(' ', array_filter([$data['hook'] ?? null, $data['caption'] ?? null, $data['script'] ?? null]));
-        if (! $realExperience && preg_match('/\b(i tried|i use|from my experience|i have used)\b|(?:ฉัน|ผม|ดิฉัน|เรา).{0,20}(?:ลองใช้|ใช้แล้ว|ใช้จริง)/iu', $copy)) {
-            throw ValidationException::withMessages(['caption' => 'Personal-use claims require a received, real_review, or scaling product.']);
+        $personalClaimPattern = <<<'REGEX'
+/\b(?:i(?:['’]ve|\s+have)?\s+(?:personally\s+)?(?:tried|tested|used|been\s+using)|i\s+(?:use|am\s+using)|from\s+my\s+experience)\b|(?:ฉัน|ผม|ดิฉัน|เรา).{0,20}(?:ลองใช้|ใช้แล้ว|ใช้จริง)/iu
+REGEX;
+        $hasPersonalClaim = false;
+        foreach (['content_angle', 'hook', 'caption', 'script', 'image_prompt', 'video_prompt'] as $field) {
+            if (preg_match($personalClaimPattern, $data[$field] ?? '') !== 1) {
+                continue;
+            }
+            $hasPersonalClaim = true;
+            if (! $realExperience) {
+                throw ValidationException::withMessages([$field => 'Personal-use claims require a received, real_review, or scaling product.']);
+            }
         }
-        $data['experience_basis'] = $data['content_type'] === 'real_review' ? 'real_use' : 'non_personal';
+        $data['experience_basis'] = $data['content_type'] === 'real_review' || $hasPersonalClaim ? 'real_use' : 'non_personal';
         $data['status'] = 'draft';
         Content::create($data);
 

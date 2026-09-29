@@ -50,7 +50,8 @@ class Product extends Model
 
     public function scopeMainOpportunity(Builder $query): Builder
     {
-        return $query->where('has_extra_comm', true);
+        return $query->where('has_extra_comm', true)
+            ->whereNotIn('product_status', [ProductStatus::Rejected->value, ProductStatus::Archived->value]);
     }
 
     public function getMainImageAttribute(): ?ProductImage
@@ -60,6 +61,9 @@ class Product extends Model
 
     public function getIsReadyAttribute(): bool
     {
-        return $this->has_extra_comm && filled($this->affiliate_url) && $this->images_count > 0;
+        return $this->has_extra_comm
+            && $this->product_status->canEnterMainOpportunity()
+            && filled($this->affiliate_url)
+            && $this->images_count > 0;
     }
 }
